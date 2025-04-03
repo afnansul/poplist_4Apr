@@ -1,0 +1,210 @@
+import 'package:flutter/material.dart';
+import 'main.dart';
+import 'settings_screen.dart';   // صفحة الإعدادات
+import 'task.dart';// صفحة المهام، تأكد أنها موجودة
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'task.dart'; // استيراد صفحة المهام
+
+class EditProfileScreen extends StatefulWidget {
+  @override
+  _EditProfileScreenState createState() => _EditProfileScreenState();
+}
+
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  int _selectedIndex = 2; // الصفحة الحالية (حساب المستخدم)
+  User? _user;
+  String? _userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserData();
+  }
+
+  Future<void> _getUserData() async {
+    _user = FirebaseAuth.instance.currentUser;
+    if (_user != null) {
+      _userId = _user!.uid;
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('User').doc(_userId).get();
+
+      if (userDoc.exists) {
+        setState(() {
+          _nameController.text = userDoc['name'] ?? 'لا يوجد اسم';
+          _emailController.text = _user!.email ?? '';
+        });
+      }
+    }
+  }
+
+  Future<void> _updateUserData() async {
+    if (_userId != null) {
+      await FirebaseFirestore.instance.collection('users').doc(_userId).update({
+        'name': _nameController.text,
+      });
+
+      if (_user!.email != _emailController.text) {
+        await _user!.updateEmail(_emailController.text);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("تم حفظ التغييرات بنجاح")),
+      );
+    }
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    // التنقل إلى الصفحة المطلوبة
+    switch (index) {
+      case 0:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => TaskEntryScreen()));
+        break;
+      case 1:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => TaskScreen()));
+        break;
+      case 2:
+      // البقاء في صفحة تعديل الحساب
+        break;
+      case 3:
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SettingsScreen(tasks: [],)));
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/setting_editprofile_bg.jpg"),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(height: 50),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                Text(
+                  "تعديل الحساب الشخصي",
+                  style: TextStyle(
+                    fontSize: 28,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 20),
+                buildInputField("اسم المستخدم", _nameController, false),
+                buildInputField("البريد الإلكتروني", _emailController, false),
+                buildInputField("كلمة المرور", _passwordController, true),
+                SizedBox(height: 20),
+                SizedBox(
+                  width: 280,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _updateUserData,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFFFFCC63),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      "حفظ التغييرات",
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Color(0xFFFFCC63),
+        selectedItemColor: Colors.blue[900], // اللون الأزرق الغامق عند التحديد
+        unselectedItemColor: Colors.white.withOpacity(0.7),
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.checklist),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: '',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildInputField(String label, TextEditingController controller, bool isPassword) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 18, color: Colors.white),
+          ),
+          SizedBox(height: 5),
+          Container(
+            width: 280,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextField(
+              controller: controller,
+              obscureText: isPassword,
+              decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
