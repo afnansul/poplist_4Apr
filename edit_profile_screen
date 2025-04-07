@@ -182,7 +182,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.checklist),
+            icon: Icon(Icons.check_box),
             label: '',
           ),
           BottomNavigationBarItem(
