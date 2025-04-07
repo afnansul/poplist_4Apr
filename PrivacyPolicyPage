@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For formatting the date
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 class PrivacyPolicyPage extends StatefulWidget {
@@ -8,58 +9,45 @@ class PrivacyPolicyPage extends StatefulWidget {
 }
 
 class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
-  bool isAdmin = true; // Set to true for admin access
-
-  // Store last updated date
+  String privacyText = "جارٍ تحميل سياسة الخصوصية...";
   DateTime lastUpdated = DateTime.now();
-
-  // Privacy policy content
-  String privacyText =
-      "تصف سياسة الخصوصية الإجراءات بشأن جمع معلوماتك واستخدامها...\n\n"
-      "نحن فريق PopList نستخدم بياناتك الشخصية لتوفير الخدمة وتحسينها. لذا باستخدامك هذه الخدمة أنت تقر بأنك توافق على جمع واستخدام البيانات وفقًا لسياسة الخصوصية.\n\n"
-      "ونوّد التنويه بأنه سيتم إبلاغك بالتغييرات في حال تم تحديث سياسة الخصوصية.";
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    initializeDateFormatting('ar', null).then((_) {
-      setState(() {}); // Rebuild the widget after initialization
-    });
+    initializeDateFormatting('ar', null);
+    _fetchPrivacyPolicy();
   }
 
-  // Function to edit privacy policy
-  void _editPrivacyPolicy() {
-    TextEditingController controller = TextEditingController(text: privacyText);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("تعديل سياسة الخصوصية"),
-          content: TextField(
-            controller: controller,
-            maxLines: 10,
-            decoration: InputDecoration(border: OutlineInputBorder()),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("إلغاء"),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  privacyText = controller.text;
-                  lastUpdated = DateTime.now(); // Update the last modified date
-                });
-                Navigator.pop(context);
-              },
-              child: Text("حفظ"),
-            ),
-          ],
-        );
-      },
-    );
+  // Fetch privacy policy from Firestore
+  Future<void> _fetchPrivacyPolicy() async {
+    print("🔍 Fetching privacy policy..."); // Debugging
+
+    try {
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection('app_data')
+          .doc('privacy_policy')
+          .get();
+
+      print("📡 Firestore request sent!"); // Debugging
+
+      if (snapshot.exists) {
+        print("✅ Document found: ${snapshot.data()}"); // Debugging
+        setState(() {
+          privacyText = snapshot['content'];
+          lastUpdated = (snapshot['lastupdated'] as Timestamp).toDate();
+          isLoading = false;
+        });
+      } else {
+        print("⚠️ Document does not exist in Firestore.");
+      }
+    } catch (e) {
+      print("❌ Error fetching privacy policy: $e");
+    }
   }
+
+
 
   // Function to format date in Arabic
   String getFormattedDate() {
@@ -75,26 +63,25 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/img4.jpg"), // Ensure this image exists
+                image: AssetImage("assets/img4.jpg"),
                 fit: BoxFit.cover,
               ),
             ),
           ),
           Column(
             children: [
-              SizedBox(height: 50), // Space for status bar
+              SizedBox(height: 50),
 
               // Header Row
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   children: [
-                    // Back button
                     IconButton(
                       icon: Icon(Icons.arrow_back, color: Colors.white, size: 28),
                       onPressed: () => Navigator.pop(context),
                     ),
-                    Spacer(), // Pushes title to the right
+                    Spacer(),
                     Text(
                       "سياسة الخصوصية",
                       style: TextStyle(
@@ -103,12 +90,6 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(width: 10), // Space between title and edit button
-                    if (isAdmin) // Show edit button only for admin
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.white, size: 28),
-                        onPressed: _editPrivacyPolicy,
-                      ),
                   ],
                 ),
               ),
@@ -129,28 +110,29 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Display dynamic last updated date
-                          Text(
-                            "آخر تحديث ${getFormattedDate()}",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black54,
+                          if (isLoading)
+                            CircularProgressIndicator()
+                          else ...[
+                            Text(
+                              "آخر تحديث ${getFormattedDate()}",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black54,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 10),
-
-                          // Privacy policy text
-                          Text(
-                            privacyText,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              height: 1.5,
-                              color: Colors.black87,
+                            SizedBox(height: 10),
+                            Text(
+                              privacyText,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16,
+                                height: 1.5,
+                                color: Colors.black87,
+                              ),
                             ),
-                          ),
+                          ]
                         ],
                       ),
                     ),
