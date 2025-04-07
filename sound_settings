@@ -46,11 +46,11 @@ class SoundSettingsPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       soundOption("أمواج (إفتراضي)"),
-                      SizedBox(height: 10), // Space between items
+                      SizedBox(height: 10),
 
-                      // "أساسي" as plain text
+                      // "أساسي"
                       Align(
-                        alignment: Alignment.centerRight, // Align the text to the right
+                        alignment: Alignment.centerRight,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 5),
                           child: Text(
@@ -67,11 +67,10 @@ class SoundSettingsPage extends StatelessWidget {
                       SizedBox(height: 10),
                       soundOption("فقاعات"),
                       SizedBox(height: 10),
-                      // Space before "إضافة"
 
-                      // "إضافة" as plain text
+                      // "إضافة"
                       Align(
-                        alignment: Alignment.centerRight, // Align the text to the right
+                        alignment: Alignment.centerRight,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 5),
                           child: Text(
@@ -111,24 +110,6 @@ class SoundSettingsPage extends StatelessWidget {
               ),
             ],
           ),
-        ],
-      ),
-
-      // Bottom Navigation Bar
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.amber,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white70,
-        currentIndex: 3, // Settings icon selected
-        onTap: (index) {
-          // Handle navigation if needed
-        },
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home, color: Colors.white), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.checklist, color: Colors.white), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.person, color: Colors.white), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.settings, color: Colors.blue), label: ""),
         ],
       ),
     );
