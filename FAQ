@@ -76,7 +76,7 @@ class FAQPage extends StatelessWidget {
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.amber,
+        backgroundColor: Color(0xFFFFCC63),
         selectedItemColor: Colors.white, // Default selected color
         unselectedItemColor: Colors.white70,
         currentIndex: 3, // Make sure this matches the index of the settings icon
