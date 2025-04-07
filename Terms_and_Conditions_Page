@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore import
 import 'package:intl/intl.dart'; // For formatting the date
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -8,61 +9,42 @@ class TermsAndConditionsPage extends StatefulWidget {
 }
 
 class _TermsAndConditionsPage extends State<TermsAndConditionsPage> {
-  bool isAdmin = true; // Set to true for admin access
-
   // Store last updated date
   DateTime lastUpdated = DateTime.now();
 
-  // Privacy policy content
-  String privacyText =
-      ".١. تطبيق بوب لست يساعد المصابين بإضطراب قلة الانتباه وفرط النشاط بتنظيم مهامهم وتحفيزهم عن طريق فتح لعبة المتاهة عند إكمال جميع المهام، وبذلك سيتحسن معدل التركيز\n\n"
-      "٢. يجب ان يكون عمر المستخدم ٦ اعوام على الأقل.\n\n"
-      "٣. بوب لست يحافظ على خصوصية المستخدم. لن يتم جمع او مشاركة اي معلومات شخصية دون إذن المستخدم.\n\n"
-      "٤. يتحمل المستخدم مسؤولية الحفاظ على سرية بيانات حسابه.\n\n"
-      "٥. سيتم إبلاغ مستخدمين بوب لست بأي تغييرات في الشروط والأحكام او سياسة الخصوصية.\n\n";
-
-
+  // Terms and conditions content
+  String termsText = "جارٍ تحميل الشروط و الأحكام...";
 
   @override
   void initState() {
     super.initState();
-    initializeDateFormatting('ar', null).then((_) {
-      setState(() {}); // Rebuild the widget after initialization
-    });
+    initializeDateFormatting('ar', null);
+    _fetchTermsAndConditions(); // Fetch terms on initialization
   }
 
-  // Function to edit privacy policy
-  void _editPrivacyPolicy() {
-    TextEditingController controller = TextEditingController(text: privacyText);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("تعديل الشروط و الأحكام"),
-          content: TextField(
-            controller: controller,
-            maxLines: 10,
-            decoration: InputDecoration(border: OutlineInputBorder()),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("إلغاء"),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  privacyText = controller.text;
-                  lastUpdated = DateTime.now(); // Update the last modified date
-                });
-                Navigator.pop(context);
-              },
-              child: Text("حفظ"),
-            ),
-          ],
-        );
-      },
-    );
+  // Fetch terms and conditions from Firestore
+  Future<void> _fetchTermsAndConditions() async {
+    print("🔍 Fetching terms and conditions...");
+
+    try {
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection('app_data')
+          .doc('terms_and_conditions')
+          .get();
+
+      print("📡 Firestore request sent!");
+
+      if (snapshot.exists) {
+        setState(() {
+          termsText = snapshot['content'];
+          lastUpdated = (snapshot['lastupdated'] as Timestamp).toDate();
+        });
+      } else {
+        print("⚠️ Document does not exist in Firestore.");
+      }
+    } catch (e) {
+      print("❌ Error fetching terms and conditions: $e");
+    }
   }
 
   // Function to format date in Arabic
@@ -107,19 +89,13 @@ class _TermsAndConditionsPage extends State<TermsAndConditionsPage> {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(width: 10), // Space between title and edit button
-                    if (isAdmin) // Show edit button only for admin
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.white, size: 28),
-                        onPressed: _editPrivacyPolicy,
-                      ),
                   ],
                 ),
               ),
 
               SizedBox(height: 20),
 
-              // Privacy Policy Content
+              // Terms and Conditions Content
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -145,16 +121,19 @@ class _TermsAndConditionsPage extends State<TermsAndConditionsPage> {
                           ),
                           SizedBox(height: 10),
 
-                          // Privacy policy text
-                          Text(
-                            privacyText,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              height: 1.5,
-                              color: Colors.black87,
+                          // Terms and conditions text
+                          if (termsText == "جارٍ تحميل الشروط و الأحكام...")
+                            CircularProgressIndicator()
+                          else
+                            Text(
+                              termsText,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16,
+                                height: 1.5,
+                                color: Colors.black87,
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
