@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'main.dart';
 import 'settings_screen.dart';   // صفحة الإعدادات
 import 'task.dart';// صفحة المهام، تأكد أنها موجودة
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,6 +16,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
 
   int _selectedIndex = 2; // الصفحة الحالية (حساب المستخدم)
   User? _user;
@@ -32,30 +32,51 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _user = FirebaseAuth.instance.currentUser;
     if (_user != null) {
       _userId = _user!.uid;
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('User').doc(_userId).get();
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(_userId).get();
 
       if (userDoc.exists) {
         setState(() {
-          _nameController.text = userDoc['name'] ?? 'لا يوجد اسم';
+          _nameController.text = userDoc['username'] ?? 'لا يوجد اسم';
           _emailController.text = _user!.email ?? '';
         });
       }
     }
   }
-
   Future<void> _updateUserData() async {
-    if (_userId != null) {
-      await FirebaseFirestore.instance.collection('users').doc(_userId).update({
-        'name': _nameController.text,
-      });
+    if (_userId != null && _user != null) {
+      try {
+        final cred = EmailAuthProvider.credential(
+          email: _user!.email!,
+          password: _passwordController.text,
+        );
 
-      if (_user!.email != _emailController.text) {
-        await _user!.updateEmail(_emailController.text);
+        // إعادة المصادقة
+        await _user!.reauthenticateWithCredential(cred);
+
+        // تحديث الاسم
+        await FirebaseFirestore.instance.collection('users').doc(_userId).update({
+          'username': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+        });
+
+        // تحديث البريد إذا تغيّر
+        if (_user!.email != _emailController.text) {
+          await _user!.updateEmail(_emailController.text);
+        }
+
+        // تحديث كلمة المرور إذا تم إدخال واحدة جديدة
+        if (_newPasswordController.text.isNotEmpty) {
+          await _user!.updatePassword(_newPasswordController.text);
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("تم حفظ التغييرات بنجاح")),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("حدث خطأ: $e")),
+        );
       }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("تم حفظ التغييرات بنجاح")),
-      );
     }
   }
 
@@ -120,6 +141,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 buildInputField("اسم المستخدم", _nameController, false),
                 buildInputField("البريد الإلكتروني", _emailController, false),
                 buildInputField("كلمة المرور", _passwordController, true),
+                buildInputField("كلمة المرور الجديدة", _newPasswordController, true),
                 SizedBox(height: 20),
                 SizedBox(
                   width: 280,
@@ -180,11 +202,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end, // هنا التعديل للمحاذاة لليمين
         children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 18, color: Colors.white),
+          Padding(
+            padding: const EdgeInsets.only(right: 5.0), // عشان مايلصق مره
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 18, color: Colors.white),
+              textAlign: TextAlign.right,
+            ),
           ),
           SizedBox(height: 5),
           Container(
@@ -195,6 +221,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: TextField(
+              //textAlign: TextAlign.right, // تقدر تحذفينه لو تبين النص داخل التيكست يصير يسار
               controller: controller,
               obscureText: isPassword,
               decoration: InputDecoration(
@@ -207,4 +234,5 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
     );
   }
+
 }
