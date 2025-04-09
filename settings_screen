@@ -18,10 +18,9 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _isBackgroundSoundOn = true;
   bool _isNotificationsOn = false;
 
-  int _selectedIndex = 3; // الإعدادات
+  int _selectedIndex = 3;
 
   void _onTabTapped(int index) {
     if (index == _selectedIndex) return;
@@ -38,7 +37,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         destination = TaskScreen();
         break;
       case 2:
-        destination =  EditProfileScreen();
+        destination = EditProfileScreen();
         break;
       case 3:
         destination = SettingsScreen(tasks: widget.tasks);
@@ -93,47 +92,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             "تعديل الحساب الشخصي",
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                           ),
-                          Icon(Icons.arrow_forward_ios, color: Colors.white), // السهم بأقصى اليسار
+                          const Icon(Icons.arrow_forward_ios, color: Colors.white),
                         ],
                       ),
                     ),
                   ),
                 ),
 
-                _buildToggleOption("أصوات الخلفية", _isBackgroundSoundOn, (value) {
-                  setState(() => _isBackgroundSoundOn = value);
-                }),
+                // الإشعارات فقط
                 _buildToggleOption("الإشعارات", _isNotificationsOn, (value) {
                   setState(() => _isNotificationsOn = value);
                 }),
 
                 const SizedBox(height: 20),
 
-                _buildSettingsOption(title: "عن PopList", icon: Icons.info, context: context,
-                  page: AboutPopListPage(),
-                ),
+                _buildSettingsOption(title: "عن PopList", context: context, page: AboutPopListPage()),
+                _buildSettingsOption(title: "سياسة الخصوصية", context: context, page: PrivacyPolicyPage()),
+                _buildSettingsOption(title: "الشروط والأحكام", context: context, page: TermsAndConditionsPage()),
+                _buildSettingsOption(title: "الأسئلة الشائعة", context: context, page: FAQPage()),
 
-                // ✅ Navigating to PrivacyPolicyPage
-                _buildSettingsOption(
-                  title: "سياسة الخصوصية",
-                  icon: Icons.privacy_tip,
-                  context: context,
-                  page: PrivacyPolicyPage(),
-                ),
-
-                _buildSettingsOption(
-                    title: "الشروط والأحكام",
-                    icon: Icons.rule,
-                    context: context,
-                    page: TermsAndConditionsPage()
-                ),
-                _buildSettingsOption(title: "الأسئلة الشائعة", icon: Icons.help, context: context,
-                    page: FAQPage()
-                ),
                 const SizedBox(height: 30),
                 _buildLogoutButton(context),
               ],
@@ -149,7 +130,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white.withOpacity(0.7),
         selectedIconTheme: IconThemeData(
-          color: _selectedIndex == 3 ? Colors.blue[900] : Colors.white, // الأزرق الغامق إذا كانت الإعدادات مختارة
+          color: _selectedIndex == 3 ? Colors.blue[900] : Colors.white,
         ),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
@@ -190,18 +171,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSettingsOption({
     required String title,
-    required IconData icon,
     required BuildContext context,
     Widget? page,
   }) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: ListTile(
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        leading: Icon(icon, color: Colors.white), // يكون على اليسار لأننا RTL
+      child: InkWell(
         onTap: () {
           if (page != null) {
             Navigator.push(
@@ -214,6 +189,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             );
           }
         },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              const Icon(Icons.arrow_forward_ios, color: Colors.white),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -231,7 +219,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         activeTrackColor: const Color(0xFFFFCC63),
         inactiveTrackColor: Colors.grey[700],
         onChanged: (bool value) {
-          onChanged(value); // استدعاء الدالة لتغيير الحالة
+          onChanged(value);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('$title: ${value ? "مفعل" : "معطل"}')),
           );
@@ -239,5 +227,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
 }
