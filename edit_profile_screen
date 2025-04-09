@@ -105,6 +105,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true, // مهم لتفعيل التمرير عند ظهور الكيبورد
       body: Stack(
         children: [
           Container(
@@ -115,63 +116,70 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: 50),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: IconButton(
-                    icon: Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 80, // مساحة كافية عشان يبان الزر فوق البار
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(height: 30),
+                  // تم حذف السهم من هنا
+                  Text(
+                    "تعديل الحساب الشخصي",
+                    style: TextStyle(
+                      fontSize: 28,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                Text(
-                  "تعديل الحساب الشخصي",
-                  style: TextStyle(
-                    fontSize: 28,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 20),
-                buildInputField("اسم المستخدم", _nameController, false),
-                buildInputField("البريد الإلكتروني", _emailController, false),
-                buildInputField("كلمة المرور", _passwordController, true),
-                buildInputField("كلمة المرور الجديدة", _newPasswordController, true),
-                SizedBox(height: 20),
-                SizedBox(
-                  width: 280,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _updateUserData,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFFFCC63),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  SizedBox(height: 20),
+                  buildInputField("اسم المستخدم", _nameController, false),
+                  buildInputField("البريد الإلكتروني", _emailController, false),
+                  buildInputField("كلمة المرور الحالية", _passwordController, true),
+                  buildInputField("كلمة المرور الجديدة", _newPasswordController, true),
+                  SizedBox(height: 30), // مسافة بعد آخر حقل
+
+                  Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      margin: EdgeInsets.only(bottom: 100),
+                      width: 280,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _updateUserData,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFFFCC63),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6), // زوايا ناعمة أكثر
+                          ),
+                        ),
+                        child: Text(
+                          "حفظ التغييرات",
+                          style: TextStyle(
+                            fontSize: 16, // تصغير حجم الخط
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
-                    child: Text(
-                      "حفظ التغييرات",
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                   ),
-                ),
-              ],
+                  SizedBox(height: 150), // مهم عشان ما يلصق بالأسفل
+                ],
+              ),
             ),
           ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Color(0xFFFFCC63),
-        selectedItemColor: Colors.blue[900], // اللون الأزرق الغامق عند التحديد
+        selectedItemColor: Colors.blue[900],
         unselectedItemColor: Colors.white.withOpacity(0.7),
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
@@ -197,7 +205,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
     );
   }
-
   Widget buildInputField(String label, TextEditingController controller, bool isPassword) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
