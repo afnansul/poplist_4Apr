@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'sound_settings.dart';
 import 'FAQ.dart';
 import 'userslist.dart';
 import 'PrivacyPolicyAdmins.dart';
@@ -69,7 +68,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ),
                     ),
-                    settingsOption(context, "تعديل أصوات الخلفية"),
+
                     settingsOption(context, "تعديل سياسة الخصوصية"),
                     settingsOption(context, "تعديل الشروط والأحكام"),
                     settingsOption(context, "إدارة الأسئلة الشائعة"),
@@ -119,9 +118,7 @@ class _SettingsPageState extends State<SettingsPage> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: GestureDetector(
         onTap: () {
-          if (title == "تعديل أصوات الخلفية") {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => SoundSettingsPage()));
-          } else if (title == "إدارة الأسئلة الشائعة") {
+          if (title == "إدارة الأسئلة الشائعة") {
             Navigator.push(context, MaterialPageRoute(builder: (context) => FAQPage()));
           } else if (title == "عرض بيانات المستخدمين") {
             Navigator.push(context, MaterialPageRoute(builder: (context) => UsersListPage()));
