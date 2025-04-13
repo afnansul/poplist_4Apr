@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'main.dart';
 import 'task.dart';
 import 'edit_profile_screen.dart';
@@ -29,7 +30,18 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   Future<void> _fetchTasksFromFirestore() async {
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('Task').get();
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print('المستخدم غير مسجل دخول');
+        return;
+      }
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Task')
+          .where('completed', isEqualTo: false) // فقط غير المكتملة
+          .where('userId', isEqualTo: user.uid) // فقط مهام هذا المستخدم
+          .get();
+
       tasks = querySnapshot.docs.map((doc) {
         return {
           'id': doc.id,
